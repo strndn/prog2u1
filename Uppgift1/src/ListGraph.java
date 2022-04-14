@@ -124,8 +124,15 @@ public class ListGraph implements Graph{
     }
 
     @Override
-    public void connect(java.lang.Object node1, java.lang.Object node2, String name, int weight) {
+    public void connect(java.lang.Object a, java.lang.Object b, String name, int weight) {
+        add(a);
+        add(b);
 
+        Set<Edge> aEdges = nodes.get(a);
+        Set<Edge> bEdges = nodes.get(b);
+
+        aEdges.add(new Edge(b, name, weight));
+        bEdges.add(new Edge(a, name, weight));
     }
 
     @Override
@@ -145,6 +152,12 @@ public class ListGraph implements Graph{
 
     @Override
     public Edge getEdgeBetween(java.lang.Object node1, java.lang.Object node2) {
+        for (Edge edge : nodes.get(node1)) {
+            if (edge.getDestination().equals(node2)) {
+                return edge;
+            }
+        }
+
         return null;
     }
 

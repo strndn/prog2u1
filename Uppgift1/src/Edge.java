@@ -29,7 +29,11 @@ public class Edge {
     }
 
     public void setWeight(int a){
-        this.weight = a;
+        if (a < 0) {
+            throw new IllegalArgumentException();
+        } else {
+            this.weight = a;
+        }
     }
 
     /*public boolean equals(Object other) {
