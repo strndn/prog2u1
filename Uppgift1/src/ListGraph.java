@@ -119,18 +119,19 @@ public class ListGraph implements Graph{
     }
 
     @Override
-    public void add(Object node) {
+    public void add(java.lang.Object node) {
         nodes.putIfAbsent(node, new HashSet<>());
+
     }
 
     @Override
     public void connect(Object a, Object b, String name, int weight) {
 
-        Set<Edge> aEdges = nodes.get(a);
-        Set<Edge> bEdges = nodes.get(b);
+        Set<Edge> aEdges = nodes.get(node1);
+        Set<Edge> bEdges = nodes.get(node2);
 
-        aEdges.add(new Edge(b, name, weight));
-        bEdges.add(new Edge(a, name, weight));
+        aEdges.add(new Edge(node2, name, weight));
+        bEdges.add(new Edge(node1, name, weight));
     }
 
     @Override
@@ -155,7 +156,13 @@ public class ListGraph implements Graph{
     }
 
     @Override
-    public Edge getEdgeBetween(Object node1, Object node2) {
+    public Edge getEdgeBetween(java.lang.Object node1, java.lang.Object node2) {
+        for (Edge edge : nodes.get(node1)) {
+            if (edge.getDestination().equals(node2)) {
+                return edge;
+            }
+        }
+
         return null;
     }
 
@@ -189,8 +196,33 @@ public class ListGraph implements Graph{
         return false;
     }
 
+    private List<Edge> gatherPath(Object from, Object to, Map<Object, Object> connection) {
+        LinkedList<Edge> path = new LinkedList<>();
+        Object current = to;
+        while (!current.equals(from)) {
+            Object next = connection.get(current);
+            Edge edge = getEdgeBetween(next, current);
+            path.addFirst(edge);
+            current = next;
+        }
+        return Collections.unmodifiableList(path);
+    }
+    private void depthFirstConnection(Object to, Object from, Map<Object, Object> connection) {
+        connection.put(to, from);
+        for (Edge edge : nodes.get(to)) {
+            if (!connection.containsKey(edge.getDestination())) {
+                depthFirstConnection(edge.getDestination(), to, connection);
+            }
+        }
+
+    }
     @Override
     public List<Edge> getPath(Object from, Object to) {
-        return null;
+        Map<Object, Object> connection = new HashMap<>();
+        depthFirstConnection(from, null, connection);
+        if (!connection.containsKey(to)) {
+            return Collections.emptyList();
+        }
+        return gatherPath(from, to, connection);
     }
 }
