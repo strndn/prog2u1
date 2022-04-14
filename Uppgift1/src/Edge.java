@@ -2,11 +2,11 @@ import java.util.Objects;
 
 public class Edge {
 
-    private final Nod destination;
+    private final Object destination;
     private final String name;
-    private final double weight;
+    private final int weight;
 
-    public Edge(Nod destination, String name, double weight) {
+    public Edge(Object destination, String name, int weight) {
         this.destination = Objects.requireNonNull(destination);
         this.name = Objects.requireNonNull(name);
 
@@ -16,7 +16,7 @@ public class Edge {
         this.weight = weight;
     }
 
-    public Nod getDestination() {
+    public Object getDestination() {
         return destination;
     }
 
@@ -24,7 +24,7 @@ public class Edge {
         return name;
     }
 
-    public double getWeight() {
+    public int getWeight() {
         return weight;
     }
 
