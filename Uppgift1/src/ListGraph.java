@@ -119,17 +119,17 @@ public class ListGraph implements Graph{
     }
 
     @Override
-    public void add(java.lang.Object node) {
+    public void add(Object node) {
+        nodes.putIfAbsent(node, new HashSet<>());
+    }
+
+    @Override
+    public void connect(Object node1, Object node2, String name, int weight) {
 
     }
 
     @Override
-    public void connect(java.lang.Object node1, java.lang.Object node2, String name, int weight) {
-
-    }
-
-    @Override
-    public void setConnectionWeight(java.lang.Object node1, java.lang.Object node2, int weight) {
+    public void setConnectionWeight(Object node1, Object node2, int weight) {
 
     }
 
@@ -139,32 +139,34 @@ public class ListGraph implements Graph{
     }
 
     @Override
-    public Collection<Edge> getEdgesFrom(java.lang.Object node) {
+    public Collection<Edge> getEdgesFrom(Object node) {
         return null;
     }
 
     @Override
-    public Edge getEdgeBetween(java.lang.Object node1, java.lang.Object node2) {
+    public Edge getEdgeBetween(Object node1, Object node2) {
         return null;
     }
 
     @Override
-    public void disconnect(java.lang.Object node1, java.lang.Object node2) {
+    public void disconnect(Object node1, Object node2) {
 
     }
 
     @Override
-    public void remove(java.lang.Object node) {
-
+    public void remove(Object node) {
+        if (!nodes.containsValue(node)) throw new NoSuchElementException();
+        nodes.remove(node);
+        nodes.get(node).
     }
 
     @Override
-    public boolean pathExists(java.lang.Object from, java.lang.Object to) {
+    public boolean pathExists(Object from, Object to) {
         return false;
     }
 
     @Override
-    public List<Edge> getPath(java.lang.Object from, java.lang.Object to) {
+    public List<Edge> getPath(Object from, Object to) {
         return null;
     }
 }
