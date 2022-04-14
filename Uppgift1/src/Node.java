@@ -1,9 +1,9 @@
 import java.util.Objects;
 
-public class Object {
+public class Node {
     private final String name;
 
-    public Object(String name) {
+    public Node(String name) {
         this.name = name;
     }
 
@@ -12,7 +12,7 @@ public class Object {
     }
 
     public boolean equals(java.lang.Object other) {
-        if (other instanceof Object nod) {
+        if (other instanceof Node nod) {
             return name.equals(nod.name);
         }
         return false;
