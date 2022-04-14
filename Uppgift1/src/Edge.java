@@ -40,7 +40,7 @@ public class Edge {
         return false;
     }*/
 
-    /*public int hashCode() {
+    /*public int hashCode() { hej
         return Objects.hash(name, destination);
     }*/
 
