@@ -127,11 +127,11 @@ public class ListGraph implements Graph{
     @Override
     public void connect(Object a, Object b, String name, int weight) {
 
-        Set<Edge> aEdges = nodes.get(node1);
-        Set<Edge> bEdges = nodes.get(node2);
+        Set<Edge> aEdges = nodes.get(a);
+        Set<Edge> bEdges = nodes.get(b);
 
-        aEdges.add(new Edge(node2, name, weight));
-        bEdges.add(new Edge(node1, name, weight));
+        aEdges.add(new Edge(b, name, weight));
+        bEdges.add(new Edge(a, name, weight));
     }
 
     @Override
