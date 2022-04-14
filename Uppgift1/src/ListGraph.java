@@ -119,12 +119,12 @@ public class ListGraph implements Graph{
     }
 
     @Override
-    public void add(java.lang.Object node) {
-
+    public void add(Object node) {
+        nodes.putIfAbsent(node, new HashSet<>());
     }
 
     @Override
-    public void connect(Object node1, Object node2, String name, int weight) {
+    public void connect(Object a, Object b, String name, int weight) {
 
         Set<Edge> aEdges = nodes.get(a);
         Set<Edge> bEdges = nodes.get(b);
@@ -134,8 +134,14 @@ public class ListGraph implements Graph{
     }
 
     @Override
-    public void setConnectionWeight(java.lang.Object node1, java.lang.Object node2, int weight) {
+    public void setConnectionWeight(Object a, Object b, int weight) {
+        for (Edge edge : nodes.get(a)) {
+            if (edge.getDestination() == b) edge.setWeight(weight);
+        }
 
+        for (Edge edge : nodes.get(b)) {
+            if (edge.getDestination() == a) edge.setWeight(weight);
+        }
     }
 
     @Override
@@ -144,32 +150,47 @@ public class ListGraph implements Graph{
     }
 
     @Override
-    public Collection<Edge> getEdgesFrom(java.lang.Object node) {
+    public Collection<Edge> getEdgesFrom(Object node) {
         return null;
     }
 
     @Override
-    public Edge getEdgeBetween(java.lang.Object node1, java.lang.Object node2) {
+    public Edge getEdgeBetween(Object node1, Object node2) {
         return null;
     }
 
     @Override
-    public void disconnect(java.lang.Object node1, java.lang.Object node2) {
+    public void disconnect(Object a, Object b) {
+        if (!nodes.containsKey(a) || !nodes.containsKey(b)) throw new NoSuchElementException();
 
+        if (getEdgeBetween(a, b) == null) throw new IllegalStateException();
+
+        nodes.get(a).remove(getEdgeBetween(a, b));
+        nodes.get(b).remove(getEdgeBetween(b, a));
     }
 
     @Override
-    public void remove(java.lang.Object node) {
+    public void remove(Object node) {
+        if (!nodes.containsKey(node)) throw new NoSuchElementException();
 
+        Set<Edge> edgesToRemove = new HashSet<>();
+
+        for (Edge edge : nodes.get(node)) {
+            nodes.get(edge.getDestination()).remove(edge);
+            edgesToRemove.add(edge);
+        }
+        nodes.get(node).removeAll(edgesToRemove);
+
+        nodes.remove(node);
     }
 
     @Override
-    public boolean pathExists(java.lang.Object from, java.lang.Object to) {
+    public boolean pathExists(Object from, Object to) {
         return false;
     }
 
     @Override
-    public List<Edge> getPath(java.lang.Object from, java.lang.Object to) {
+    public List<Edge> getPath(Object from, Object to) {
         return null;
     }
 }
