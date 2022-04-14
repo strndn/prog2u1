@@ -5,13 +5,13 @@ import java.util.*;
  */
 public class ListGraph {
 
-    private final Map<City, Set<Edge>> nodes = new HashMap<>();
+    private final Map<Nod, Set<Edge>> nodes = new HashMap<>();
 
-    public void add(City city) {
-        nodes.putIfAbsent(city, new HashSet<>());
+    public void add(Nod nod) {
+        nodes.putIfAbsent(nod, new HashSet<>());
     }
 
-    public void connect(City a, City b, String name, double weight) {
+    public void connect(Nod a, Nod b, String name, double weight) {
         add(a);
         add(b);
 
@@ -23,14 +23,14 @@ public class ListGraph {
 
     }
 
-    public boolean pathExists(City a, City b) {
-        Set<City> visited = new HashSet<>();
+    public boolean pathExists(Nod a, Nod b) {
+        Set<Nod> visited = new HashSet<>();
         depthFirstVisitAll(a, visited);
         return visited.contains(b);
     }
 
-    public List<Edge> getAnyPath(City from, City to) {
-        Map<City, City> connection = new HashMap<>();
+    public List<Edge> getAnyPath(Nod from, Nod to) {
+        Map<Nod, Nod> connection = new HashMap<>();
         depthFirstConnection(from, null, connection);
         if (!connection.containsKey(to)) {
             return Collections.emptyList();
@@ -38,18 +38,18 @@ public class ListGraph {
         return gatherPath(from, to, connection);
     }
 
-    public List<Edge> getShortestPath(City from, City to) {
-        Map<City, City> connections = new HashMap<>();
+    public List<Edge> getShortestPath(Nod from, Nod to) {
+        Map<Nod, Nod> connections = new HashMap<>();
         connections.put(from, null);
 
-        LinkedList<City> queue = new LinkedList<>();
+        LinkedList<Nod> queue = new LinkedList<>();
         queue.add(from);
         while (!queue.isEmpty()) {
-            City city = queue.pollFirst();
-            for (Edge edge : nodes.get(city)) {
-                City destination = edge.getDestination();
+            Nod nod = queue.pollFirst();
+            for (Edge edge : nodes.get(nod)) {
+                Nod destination = edge.getDestination();
                 if (!connections.containsKey(destination)) {
-                    connections.put(destination, city);
+                    connections.put(destination, nod);
                     queue.add(destination);
                 }
             }
@@ -63,11 +63,11 @@ public class ListGraph {
 
     }
 
-    private List<Edge> gatherPath(City from, City to, Map<City, City> connection) {
+    private List<Edge> gatherPath(Nod from, Nod to, Map<Nod, Nod> connection) {
         LinkedList<Edge> path = new LinkedList<>();
-        City current = to;
+        Nod current = to;
         while (!current.equals(from)) {
-            City next = connection.get(current);
+            Nod next = connection.get(current);
             Edge edge = getEdgeBetween(next, current);
             path.addFirst(edge);
             current = next;
@@ -75,7 +75,7 @@ public class ListGraph {
         return Collections.unmodifiableList(path);
     }
 
-    private Edge getEdgeBetween(City next, City current) {
+    private Edge getEdgeBetween(Nod next, Nod current) {
         for (Edge edge : nodes.get(next)) {
             if (edge.getDestination().equals(current)) {
                 return edge;
@@ -85,7 +85,7 @@ public class ListGraph {
         return null;
     }
 
-    private void depthFirstConnection(City to, City from, Map<City, City> connection) {
+    private void depthFirstConnection(Nod to, Nod from, Map<Nod, Nod> connection) {
         connection.put(to, from);
         for (Edge edge : nodes.get(to)) {
             if (!connection.containsKey(edge.getDestination())) {
@@ -95,7 +95,7 @@ public class ListGraph {
 
     }
 
-    private void depthFirstVisitAll(City current, Set<City> visited) {
+    private void depthFirstVisitAll(Nod current, Set<Nod> visited) {
         visited.add(current);
         for (Edge edge : nodes.get(current)) {
             if (!visited.contains(edge.getDestination())) {
@@ -108,8 +108,8 @@ public class ListGraph {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (City city : nodes.keySet()) {
-            sb.append(city).append(": ").append(nodes.get(city)).append("\n");
+        for (Nod nod : nodes.keySet()) {
+            sb.append(nod).append(": ").append(nodes.get(nod)).append("\n");
         }
         return sb.toString();
     }
