@@ -3,15 +3,17 @@ import java.util.*;
 /**
  * Oriktad graf
  */
-public class ListGraph {
+public class ListGraph implements Graph{
 
-    private final Map<Nod, Set<Edge>> nodes = new HashMap<>();
+    private final Map<Object, Set<Edge>> nodes = new HashMap<>();
 
-    public void add(Nod nod) {
+
+    /*public void add(Object nod) {
         nodes.putIfAbsent(nod, new HashSet<>());
-    }
+    }*/
 
-    public void connect(Nod a, Nod b, String name, double weight) {
+
+    /*public void connect(Object a, Object b, String name, int weight) {
         add(a);
         add(b);
 
@@ -21,33 +23,34 @@ public class ListGraph {
         aEdges.add(new Edge(b, name, weight));
         bEdges.add(new Edge(a, name, weight));
 
-    }
+    }*/
 
-    public boolean pathExists(Nod a, Nod b) {
-        Set<Nod> visited = new HashSet<>();
+
+    /*public boolean pathExists(Object a, Object b) {
+        Set<Object> visited = new HashSet<>();
         depthFirstVisitAll(a, visited);
         return visited.contains(b);
-    }
+    }*/
 
-    public List<Edge> getAnyPath(Nod from, Nod to) {
-        Map<Nod, Nod> connection = new HashMap<>();
+    /*public List<Edge> getAnyPath(Object from, Object to) {
+        Map<Object, Object> connection = new HashMap<>();
         depthFirstConnection(from, null, connection);
         if (!connection.containsKey(to)) {
             return Collections.emptyList();
         }
         return gatherPath(from, to, connection);
-    }
+    }*/
 
-    public List<Edge> getShortestPath(Nod from, Nod to) {
-        Map<Nod, Nod> connections = new HashMap<>();
+    /*public List<Edge> getShortestPath(Object from, Object to) {
+        Map<Object, Object> connections = new HashMap<>();
         connections.put(from, null);
 
-        LinkedList<Nod> queue = new LinkedList<>();
+        LinkedList<Object> queue = new LinkedList<>();
         queue.add(from);
         while (!queue.isEmpty()) {
-            Nod nod = queue.pollFirst();
+            Object nod = queue.pollFirst();
             for (Edge edge : nodes.get(nod)) {
-                Nod destination = edge.getDestination();
+                Object destination = edge.getDestination();
                 if (!connections.containsKey(destination)) {
                     connections.put(destination, nod);
                     queue.add(destination);
@@ -61,21 +64,22 @@ public class ListGraph {
 
         return gatherPath(from, to, connections);
 
-    }
+    }*/
 
-    private List<Edge> gatherPath(Nod from, Nod to, Map<Nod, Nod> connection) {
+    /*private List<Edge> gatherPath(Object from, Object to, Map<Object, Object> connection) {
         LinkedList<Edge> path = new LinkedList<>();
-        Nod current = to;
+        Object current = to;
         while (!current.equals(from)) {
-            Nod next = connection.get(current);
+            Object next = connection.get(current);
             Edge edge = getEdgeBetween(next, current);
             path.addFirst(edge);
             current = next;
         }
         return Collections.unmodifiableList(path);
-    }
+    }*/
 
-    private Edge getEdgeBetween(Nod next, Nod current) {
+
+    /*public Edge getEdgeBetween(Object next, Object current) {
         for (Edge edge : nodes.get(next)) {
             if (edge.getDestination().equals(current)) {
                 return edge;
@@ -83,9 +87,9 @@ public class ListGraph {
         }
 
         return null;
-    }
+    }*/
 
-    private void depthFirstConnection(Nod to, Nod from, Map<Nod, Nod> connection) {
+    /*private void depthFirstConnection(Object to, Object from, Map<Object, Object> connection) {
         connection.put(to, from);
         for (Edge edge : nodes.get(to)) {
             if (!connection.containsKey(edge.getDestination())) {
@@ -93,26 +97,74 @@ public class ListGraph {
             }
         }
 
-    }
+    }*/
 
-    private void depthFirstVisitAll(Nod current, Set<Nod> visited) {
+    /*private void depthFirstVisitAll(Object current, Set<Object> visited) {
         visited.add(current);
         for (Edge edge : nodes.get(current)) {
             if (!visited.contains(edge.getDestination())) {
                 depthFirstVisitAll(edge.getDestination(), visited);
             }
         }
-    }
+    }*/
 
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (Nod nod : nodes.keySet()) {
+        for (Object nod : nodes.keySet()) {
             sb.append(nod).append(": ").append(nodes.get(nod)).append("\n");
         }
         return sb.toString();
     }
 
+    @Override
+    public void add(java.lang.Object node) {
 
+    }
+
+    @Override
+    public void connect(java.lang.Object node1, java.lang.Object node2, String name, int weight) {
+
+    }
+
+    @Override
+    public void setConnectionWeight(java.lang.Object node1, java.lang.Object node2, int weight) {
+
+    }
+
+    @Override
+    public Set getNodes() {
+        return null;
+    }
+
+    @Override
+    public Collection<Edge> getEdgesFrom(java.lang.Object node) {
+        return null;
+    }
+
+    @Override
+    public Edge getEdgeBetween(java.lang.Object node1, java.lang.Object node2) {
+        return null;
+    }
+
+    @Override
+    public void disconnect(java.lang.Object node1, java.lang.Object node2) {
+
+    }
+
+    @Override
+    public void remove(java.lang.Object node) {
+
+    }
+
+    @Override
+    public boolean pathExists(java.lang.Object from, java.lang.Object to) {
+        return false;
+    }
+
+    @Override
+    public List<Edge> getPath(java.lang.Object from, java.lang.Object to) {
+        return null;
+    }
 }

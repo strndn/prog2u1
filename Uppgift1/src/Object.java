@@ -1,9 +1,9 @@
 import java.util.Objects;
 
-public class Nod {
+public class Object {
     private final String name;
 
-    public Nod(String name) {
+    public Object(String name) {
         this.name = name;
     }
 
@@ -11,8 +11,8 @@ public class Nod {
         return name;
     }
 
-    public boolean equals(Object other) {
-        if (other instanceof Nod nod) {
+    public boolean equals(java.lang.Object other) {
+        if (other instanceof Object nod) {
             return name.equals(nod.name);
         }
         return false;
