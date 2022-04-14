@@ -4,9 +4,9 @@ public class Edge {
 
     private final Nod destination;
     private final String name;
-    private final double weight;
+    private int weight;
 
-    public Edge(Nod destination, String name, double weight) {
+    public Edge(Nod destination, String name, int weight) {
         this.destination = Objects.requireNonNull(destination);
         this.name = Objects.requireNonNull(name);
 
@@ -28,17 +28,21 @@ public class Edge {
         return weight;
     }
 
-    public boolean equals(Object other) {
+    public void setWeight(int a){
+        this.weight = a;
+    }
+
+    /*public boolean equals(Object other) {
         if (other instanceof Edge edge) {
             return Objects.equals(name, edge.name) &&
                     Objects.equals(destination, edge.destination);
         }
         return false;
-    }
+    }*/
 
-    public int hashCode() {
+    /*public int hashCode() {
         return Objects.hash(name, destination);
-    }
+    }*/
 
     @Override
     public String toString() {
