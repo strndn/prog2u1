@@ -1,6 +1,7 @@
 import java.util.Objects;
+import java.io.Serializable;
 
-public class Edge {
+public class Edge<T> {
 
     private final Object destination;
     private final String name;
@@ -24,7 +25,7 @@ public class Edge {
         return name;
     }
 
-    public double getWeight() {
+    public int getWeight() {
         return weight;
     }
 

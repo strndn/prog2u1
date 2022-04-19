@@ -1,9 +1,10 @@
 import java.util.*;
+import java.io.Serializable;
 
 /**
  * Oriktad graf
  */
-public class ListGraph implements Graph{
+public class ListGraph<T> implements Graph{
 
     private final Map<Object, Set<Edge>> nodes = new HashMap<>();
 
@@ -121,12 +122,10 @@ public class ListGraph implements Graph{
     @Override
     public void add(java.lang.Object node) {
         nodes.putIfAbsent(node, new HashSet<>());
-
     }
 
     @Override
     public void connect(Object a, Object b, String name, int weight) {
-
         Set<Edge> aEdges = nodes.get(a);
         Set<Edge> bEdges = nodes.get(b);
 
@@ -147,12 +146,17 @@ public class ListGraph implements Graph{
 
     @Override
     public Set getNodes() {
-        return null;
+        Set<Object> nodes = new HashSet<>();
+        nodes.addAll(this.nodes.keySet());
+        return nodes;
     }
 
     @Override
     public Collection<Edge> getEdgesFrom(Object node) {
-        return null;
+        if (!nodes.containsKey(node)) throw new NoSuchElementException();
+
+        Collection<Edge> edges = nodes.get(node);
+        return edges;
     }
 
     @Override
@@ -193,7 +197,7 @@ public class ListGraph implements Graph{
 
     @Override
     public boolean pathExists(Object from, Object to) {
-        return false;
+        return getPath(from,to).equals(Collections.emptyList()) ? false : true;
     }
 
     private List<Edge> gatherPath(Object from, Object to, Map<Object, Object> connection) {
