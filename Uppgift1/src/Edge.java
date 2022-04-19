@@ -1,7 +1,7 @@
 import java.util.Objects;
 import java.io.Serializable;
 
-public class Edge<T> {
+public class Edge<T> implements Serializable{
 
     private final Object destination;
     private final String name;
@@ -17,8 +17,8 @@ public class Edge<T> {
         this.weight = weight;
     }
 
-    public Object getDestination() {
-        return destination;
+    public String getDestination() {
+        return destination.toString();
     }
 
     public String getName() {
@@ -51,11 +51,7 @@ public class Edge<T> {
 
     @Override
     public String toString() {
-        return "Edge{" +
-                "destination=" + destination +
-                ", name='" + name + '\'' +
-                ", weight=" + weight +
-                '}';
+        return String.format("till %s med %s tar %d", destination, name, weight);
     }
 }
 
