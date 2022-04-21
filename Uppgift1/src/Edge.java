@@ -37,18 +37,6 @@ public class Edge<T> implements Serializable{
         }
     }
 
-    /*public boolean equals(Object other) {
-        if (other instanceof Edge edge) {
-            return Objects.equals(name, edge.name) &&
-                    Objects.equals(destination, edge.destination);
-        }
-        return false;
-    }*/
-
-    /*public int hashCode() {
-        return Objects.hash(name, destination);
-    }*/
-
     @Override
     public String toString() {
         return String.format("till %s med %s tar %d", destination, name, weight);
