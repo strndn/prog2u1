@@ -1,3 +1,8 @@
+// PROG2 VT2022, Inlämningsuppgift, del 1
+// Grupp 088
+// Lukas Strand lust9442
+// Morgan Sohl moso0848
+
 import java.util.Objects;
 import java.io.Serializable;
 
