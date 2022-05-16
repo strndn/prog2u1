@@ -7,7 +7,7 @@ import java.util.*;
 import java.io.Serializable;
 
 
-public class ListGraph<T> implements Graph, Serializable{
+public class ListGraph<T> implements Graph, Serializable {
 
     private final Map<Object, Set<Edge>> nodes = new HashMap<>();
 
