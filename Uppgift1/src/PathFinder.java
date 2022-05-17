@@ -26,9 +26,10 @@ public class PathFinder extends Application{
     private BorderPane root;
     private Stage stage;
     private Pane center;
-    private Button newPlaceButton, newConButton;
+    private Button newPlaceButton, newConButton, showConButton;
     private final ListGraph<Node> listGraph = new ListGraph<>();
     private SelectHandler selectHandler = new SelectHandler();
+    private showConHandler showConHandler = new showConHandler();
     private Node node1 = null, node2 = null;
 
     @Override
@@ -75,7 +76,8 @@ public class PathFinder extends Application{
         newConButton = new Button("New Connection");
         newConButton.setOnAction(new newConHandler());
 
-        Button showConButton = new Button("Show Connection");
+        showConButton = new Button("Show Connection");
+        showConButton.setOnAction(new showConHandler());
 
         Button changeConButton = new Button("Change Connection");
 
@@ -89,6 +91,7 @@ public class PathFinder extends Application{
         //stage.setOnCloseRequest(new ExitHandler());
         stage.show();
     }
+
 
     class newMapHandler implements EventHandler<ActionEvent>{
         @Override
@@ -200,6 +203,36 @@ public class PathFinder extends Application{
             } else if (node2 == n) {
                 node2 = null;
                 n.paintUnSelected();
+            }
+        }
+    }
+    class showConHandler implements EventHandler<ActionEvent>{
+        @Override
+        public void handle(ActionEvent actionEvent) {
+            showConButton.setDisable(true);
+            if (node1 == null || node2 == null ) {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error!");
+                errorAlert.setHeaderText("Two places must be selected!");
+                errorAlert.showAndWait();
+            } else if (listGraph.getEdgeBetween(node1, node2) == null) {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error!");
+                errorAlert.setHeaderText("There is no connection between these two!");
+                errorAlert.showAndWait();
+            } else{
+                Edge e = listGraph.getEdgeBetween(node1, node2);
+                ShowCon showCon = new ShowCon(node1, node2, e);
+                showCon.showAndWait();
+                showConButton.setDisable(false);
+                node1.paintUnSelected();
+                node1 = null;
+                node2.paintUnSelected();
+                node2 = null;
+
+
+
+
             }
         }
     }
