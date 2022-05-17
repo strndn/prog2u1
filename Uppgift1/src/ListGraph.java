@@ -105,6 +105,7 @@ public class ListGraph<T> implements Graph, Serializable {
         nodes.remove(node);
     }
 
+
     @Override
     public boolean pathExists(Object from, Object to) {
         if (!nodes.containsKey(from) || !nodes.containsKey(to) || getPath(from, to) == null) return false;
