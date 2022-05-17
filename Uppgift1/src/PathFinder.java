@@ -1,16 +1,15 @@
 import javafx.application.Application;
-import javafx.beans.binding.Bindings;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Line;
@@ -19,6 +18,12 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 public class PathFinder extends Application{
@@ -26,10 +31,10 @@ public class PathFinder extends Application{
     private BorderPane root;
     private Stage stage;
     private Pane center;
-    private Button newPlaceButton, newConButton, showConButton;
+    private Button newPlaceButton, newConButton, showConButton, changeConButton, findPathButton;
     private final ListGraph<Node> listGraph = new ListGraph<>();
     private SelectHandler selectHandler = new SelectHandler();
-    private showConHandler showConHandler = new showConHandler();
+    private ShowConHandler showConHandler = new ShowConHandler();
     private Node node1 = null, node2 = null;
 
     @Override
@@ -49,17 +54,18 @@ public class PathFinder extends Application{
 
         MenuItem newMapMenu = new MenuItem("New Map");
         fileMenu.getItems().add(newMapMenu);
-        newMapMenu.setOnAction(new newMapHandler());
+        newMapMenu.setOnAction(new NewMapHandler());
 
         MenuItem openMenu = new MenuItem("Open");
         fileMenu.getItems().add(openMenu);
-        openMenu.setOnAction(new openHandler());
+        openMenu.setOnAction(new OpenHandler());
 
         MenuItem saveMenu = new MenuItem("Save");
         fileMenu.getItems().add(saveMenu);
 
         MenuItem saveImgMenu = new MenuItem("Save Image");
         fileMenu.getItems().add(saveImgMenu);
+        saveImgMenu.setOnAction(new SaveImageHandler());
 
         MenuItem exitMenu = new MenuItem("Exit");
         fileMenu.getItems().add(exitMenu);
@@ -71,17 +77,19 @@ public class PathFinder extends Application{
         controls.setHgap(10);
 
         newPlaceButton = new Button("New Place");
-        newPlaceButton.setOnAction(new newPlaceHandler());
+        newPlaceButton.setOnAction(new NewPlaceHandler());
 
         newConButton = new Button("New Connection");
-        newConButton.setOnAction(new newConHandler());
+        newConButton.setOnAction(new NewConHandler());
 
         showConButton = new Button("Show Connection");
-        showConButton.setOnAction(new showConHandler());
+        showConButton.setOnAction(new ShowConHandler());
 
-        Button changeConButton = new Button("Change Connection");
+        changeConButton = new Button("Change Connection");
+        changeConButton.setOnAction(new ChangeConHandler());
 
-        Button findPathButton = new Button("Find Path");
+        findPathButton = new Button("Find Path");
+        findPathButton.setOnAction(new FindPathHandler());
         controls.getChildren().addAll(newPlaceButton, newConButton, showConButton, changeConButton, findPathButton);
 
         Scene scene = new Scene(root, 618, 82);
@@ -93,21 +101,21 @@ public class PathFinder extends Application{
     }
 
 
-    class newMapHandler implements EventHandler<ActionEvent>{
+    class NewMapHandler implements EventHandler<ActionEvent>{
         @Override
         public void handle(ActionEvent actionEvent) {
             showImg();
         }
     }
 
-    class openHandler implements EventHandler<ActionEvent>{
+    class OpenHandler implements EventHandler<ActionEvent>{
         @Override
         public void handle(ActionEvent actionEvent) {
             showImg();
         }
     }
 
-    class newPlaceHandler implements EventHandler<ActionEvent>{
+    class NewPlaceHandler implements EventHandler<ActionEvent>{
         @Override
         public void handle(ActionEvent actionEvent) {
             center.setOnMouseClicked(new ClickHandler());
@@ -116,7 +124,7 @@ public class PathFinder extends Application{
         }
     }
 
-    class newConHandler implements EventHandler<ActionEvent> {
+    class NewConHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent actionEvent) {
             newConButton.setDisable(true);
@@ -206,7 +214,8 @@ public class PathFinder extends Application{
             }
         }
     }
-    class showConHandler implements EventHandler<ActionEvent>{
+
+    class ShowConHandler implements EventHandler<ActionEvent>{
         @Override
         public void handle(ActionEvent actionEvent) {
             showConButton.setDisable(true);
@@ -222,17 +231,78 @@ public class PathFinder extends Application{
                 errorAlert.showAndWait();
             } else{
                 Edge e = listGraph.getEdgeBetween(node1, node2);
-                ShowCon showCon = new ShowCon(node1, node2, e);
-                showCon.showAndWait();
-                showConButton.setDisable(false);
+                ShowConForm showConForm = new ShowConForm(node1, node2, e);
+                showConForm.showAndWait();
                 node1.paintUnSelected();
                 node1 = null;
                 node2.paintUnSelected();
                 node2 = null;
+            }
+            showConButton.setDisable(false);
+        }
+    }
 
+    class ChangeConHandler implements EventHandler<ActionEvent> {
+        @Override
+        public void handle(ActionEvent actionEvent) {
+            changeConButton.setDisable(true);
+            if (node1 == null || node2 == null ) {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error!");
+                errorAlert.setHeaderText("Two places must be selected!");
+                errorAlert.showAndWait();
+            } else if (listGraph.getEdgeBetween(node1, node2) == null) {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error!");
+                errorAlert.setHeaderText("There is no connection between these two!");
+                errorAlert.showAndWait();
+            } else{
+                Edge e = listGraph.getEdgeBetween(node1, node2);
+                ChangeConForm changeConForm = new ChangeConForm(node1, node2, e);
+                changeConForm.showAndWait();
+                listGraph.setConnectionWeight(node1, node2, changeConForm.getTime());
 
+                node1.paintUnSelected();
+                node1 = null;
+                node2.paintUnSelected();
+                node2 = null;
+            }
+            changeConButton.setDisable(false);
+        }
+    }
 
+    class FindPathHandler implements EventHandler<ActionEvent> {
+        @Override
+        public void handle(ActionEvent actionEvent) {
+            changeConButton.setDisable(true);
+            if (node1 == null || node2 == null ) {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error!");
+                errorAlert.setHeaderText("Two places must be selected!");
+                errorAlert.showAndWait();
+            } else if (!listGraph.pathExists(node1, node2)) {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error!");
+                errorAlert.setHeaderText("There is no path between these two!");
+                errorAlert.showAndWait();
+            } else{
+                List l = listGraph.getPath(node1, node2);
+                FindPathForm form = new FindPathForm(node1, node2, l);
+                form.showAndWait();
+            }
+            changeConButton.setDisable(false);
+        }
+    }
 
+    class SaveImageHandler implements EventHandler<ActionEvent>{
+        public void handle(ActionEvent event){
+            try{
+                WritableImage image = center.snapshot(null, null);
+                BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
+                ImageIO.write(bufferedImage, "png", new File("capture.png"));
+            }catch (IOException e){
+                Alert alert = new Alert(Alert.AlertType.ERROR,"IO-fel "+e.getMessage());
+                alert.showAndWait();
             }
         }
     }

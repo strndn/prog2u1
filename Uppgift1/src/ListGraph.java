@@ -45,11 +45,11 @@ public class ListGraph<T> implements Graph, Serializable {
         if (!nodes.containsKey(a) || !nodes.containsKey(b)) throw new NoSuchElementException();
         if (getEdgeBetween(a, b) == null) throw new NoSuchElementException();
         for (Edge edge : nodes.get(a)) {
-            if (edge.getDestination() == b) edge.setWeight(weight);
+            if (edge.getDestinationString().equals(b.toString())) edge.setWeight(weight);
         }
 
         for (Edge edge : nodes.get(b)) {
-            if (edge.getDestination() == a) edge.setWeight(weight);
+            if (edge.getDestinationString().equals(a.toString())) edge.setWeight(weight);
         }
     }
 
@@ -72,7 +72,7 @@ public class ListGraph<T> implements Graph, Serializable {
         if (!nodes.containsKey(node1) || !nodes.containsKey(node2)) throw new NoSuchElementException();
 
         for (Edge edge : nodes.get(node1)) {
-            if (edge.getDestination().equals(node2.toString())) {
+            if (edge.getDestinationString().equals(node2.toString())) {
                 return edge;
             }
         }
@@ -97,7 +97,7 @@ public class ListGraph<T> implements Graph, Serializable {
         Set<Edge> edgesToRemove = new HashSet<>();
 
         for (Edge edge : nodes.get(node)) {
-            nodes.get(edge.getDestination()).removeIf(edge1 -> Objects.equals(edge1.getDestination(), node.toString()));
+            nodes.get(edge.getDestinationString()).removeIf(edge1 -> Objects.equals(edge1.getDestinationString(), node.toString()));
             edgesToRemove.add(edge);
         }
         nodes.get(node).removeAll(edgesToRemove);

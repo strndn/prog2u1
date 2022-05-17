@@ -22,8 +22,12 @@ public class Edge<T> implements Serializable{
         this.weight = weight;
     }
 
-    public String getDestination() {
+    public String getDestinationString() {
         return destination.toString();
+    }
+
+    public Object getDestination()  {
+        return destination;
     }
 
     public String getName() {
@@ -44,7 +48,7 @@ public class Edge<T> implements Serializable{
 
     @Override
     public String toString() {
-        return String.format("till %s med %s tar %d", destination, name, weight);
+        return String.format("to %s by %s takes %d", destination, name, weight);
     }
 }
 
