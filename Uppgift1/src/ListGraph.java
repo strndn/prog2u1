@@ -68,11 +68,11 @@ public class ListGraph<T> implements Graph, Serializable {
     }
 
     @Override
-    public Edge getEdgeBetween(java.lang.Object node1, java.lang.Object node2) {
+    public Edge getEdgeBetween(Object node1, Object node2) {
         if (!nodes.containsKey(node1) || !nodes.containsKey(node2)) throw new NoSuchElementException();
 
         for (Edge edge : nodes.get(node1)) {
-            if (edge.getDestination().equals(node2)) {
+            if (edge.getDestination().equals(node2.toString())) {
                 return edge;
             }
         }

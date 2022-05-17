@@ -7,14 +7,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-public class NodeForm extends Alert {
+public class ConForm extends Alert {
 
-    private TextField nameField = new TextField();
-    public NodeForm() {
+    private TextField nameField = new TextField(), timeField = new TextField();
+    public ConForm(Node n1, Node n2) {
         super(AlertType.CONFIRMATION);
-        this.setTitle("New Place");
-        this.setHeaderText("Name your place!");
-        this.setGraphic(null);
+        this.setTitle("New Connection");
+        this.setHeaderText(String.format("Connection from %s to %s", n1.getName(), n2.getName()));
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(10));
         grid.setAlignment(Pos.CENTER);
@@ -22,11 +21,18 @@ public class NodeForm extends Alert {
         grid.setVgap(5);
 
         grid.addRow(0, new Label("Name:"), nameField);
+        grid.addRow(1, new Label("Time:"), timeField);
         getDialogPane().setContent(grid);
-        getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(Bindings.isEmpty(nameField.textProperty()));
+        getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(
+                Bindings.isEmpty(nameField.textProperty())
+                .and(Bindings.isEmpty(timeField.textProperty())));
     }
 
     public String getName() {
         return nameField.getText();
+    }
+
+    public int getTime() {
+        return Integer.parseInt(timeField.getText());
     }
 }

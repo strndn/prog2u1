@@ -7,6 +7,7 @@ import java.util.Objects;
 public class Node extends Canvas {
     private final String name;
     private final double xPos, yPos;
+    private boolean selected;
 
 
     public Node(String name, double xPos, double yPos) {
@@ -16,13 +17,33 @@ public class Node extends Canvas {
         this.yPos = yPos;
 
         relocate(xPos - (getWidth()/2), yPos - (getHeight()/2));
-        paintCovered();
+        paintUnSelected();
     }
 
-    public void paintCovered(){
+    public double getxPos() {
+        return xPos;
+    }
+
+    public double getyPos() {
+        return yPos;
+    }
+
+    public void paintUnSelected(){
         GraphicsContext gc = getGraphicsContext2D();
         gc.setFill(Color.BLUE);
-        gc.fillOval(0, 0, getWidth(), getHeight());
+        gc.fillOval(0, 0, getWidth()-1, getHeight()-1);
+        selected = false;
+    }
+
+    public void paintSelected(){
+        GraphicsContext gc = getGraphicsContext2D();
+        gc.setFill(Color.RED);
+        gc.fillOval(0, 0, getWidth()-1, getHeight()-1);
+        selected = true;
+    }
+
+    public boolean isSelected(){
+        return selected;
     }
 
     public String getName() {

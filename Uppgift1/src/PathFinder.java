@@ -1,15 +1,22 @@
 import javafx.application.Application;
+import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.shape.Line;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.util.Optional;
@@ -19,8 +26,10 @@ public class PathFinder extends Application{
     private BorderPane root;
     private Stage stage;
     private Pane center;
-    private Button newPlaceButton;
-    private ListGraph<Node> listGraph = new ListGraph<>();
+    private Button newPlaceButton, newConButton;
+    private final ListGraph<Node> listGraph = new ListGraph<>();
+    private SelectHandler selectHandler = new SelectHandler();
+    private Node node1 = null, node2 = null;
 
     @Override
     public void start(Stage primaryStage) {
@@ -63,7 +72,8 @@ public class PathFinder extends Application{
         newPlaceButton = new Button("New Place");
         newPlaceButton.setOnAction(new newPlaceHandler());
 
-        Button newConButton = new Button("New Connection");
+        newConButton = new Button("New Connection");
+        newConButton.setOnAction(new newConHandler());
 
         Button showConButton = new Button("Show Connection");
 
@@ -103,6 +113,48 @@ public class PathFinder extends Application{
         }
     }
 
+    class newConHandler implements EventHandler<ActionEvent> {
+        @Override
+        public void handle(ActionEvent actionEvent) {
+            newConButton.setDisable(true);
+            if (node1 == null || node2 == null ) {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error!");
+                errorAlert.setHeaderText("Two places must be selected!");
+                errorAlert.showAndWait();
+            } else if (listGraph.getEdgeBetween(node1, node2) != null) {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error!");
+                errorAlert.setHeaderText("There already exists a connection between these two!");
+                errorAlert.showAndWait();
+            } else {
+                    try {
+                        ConForm form = new ConForm(node1, node2);
+                        Optional<ButtonType> answer = form.showAndWait();
+
+                        if (answer.isPresent() && answer.get() == ButtonType.OK) {
+                            String name = form.getName();
+                            int time = form.getTime();
+                            listGraph.connect(node1, node2, name, time);
+                            Line line = new Line(node1.getxPos(), node1.getyPos(), node2.getxPos(), node2.getyPos());
+                            line.setStrokeWidth(4);
+                            center.getChildren().add(line);
+                        }
+                    } catch (NumberFormatException e){
+                        Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                        errorAlert.setTitle("Error!");
+                        errorAlert.setHeaderText("Please enter numbers into time!");
+                        errorAlert.showAndWait();
+                    }
+                }
+            newConButton.setDisable(false);
+            node1.paintUnSelected();
+            node1 = null;
+            node2.paintUnSelected();
+            node2 = null;
+        }
+    }
+
     class ClickHandler implements EventHandler<MouseEvent> {
         @Override
         public void handle(MouseEvent mouseEvent) {
@@ -111,19 +163,44 @@ public class PathFinder extends Application{
             try {
                 NodeForm form = new NodeForm();
                 Optional<ButtonType> answer = form.showAndWait();
-                if (answer.isPresent() && answer.get() != ButtonType.OK)
-                    return;
-                String name = form.getName();
-                Node node = new Node(name, x, y);
-                listGraph.add(node);
-                center.getChildren().add(node);
-                center.setOnMouseClicked(null);
-                center.setCursor(Cursor.DEFAULT);
-                newPlaceButton.setDisable(false);
+
+                if (answer.isPresent() && answer.get() == ButtonType.OK) {
+                        String name = form.getName();
+                        Node node = new Node(name, x, y);
+                        node.setOnMouseClicked(selectHandler);
+                        listGraph.add(node);
+                        Text text = new Text(node.getName());
+                        text.setX(node.getxPos());
+                        text.setY(node.getyPos()+30);
+                        text.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+                        center.getChildren().addAll(node, text);
+                }
             } catch (Exception e) {
                 System.out.println(e);
             }
+            center.setOnMouseClicked(null);
+            center.setCursor(Cursor.DEFAULT);
+            newPlaceButton.setDisable(false);
+        }
+    }
 
+    class SelectHandler implements EventHandler<MouseEvent> {
+        @Override
+        public void handle(MouseEvent mouseEvent) {
+            Node n = (Node) mouseEvent.getSource();
+            if (node1 == null) {
+                node1 = n;
+                node1.paintSelected();
+            } else if (node2 == null && n != node1)  {
+                node2 = n;
+                node2.paintSelected();
+            } else if (node1 == n) {
+                node1 = null;
+                n.paintUnSelected();
+            } else if (node2 == n) {
+                node2 = null;
+                n.paintUnSelected();
+            }
         }
     }
 
