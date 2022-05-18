@@ -1,16 +1,15 @@
 import javafx.application.Application;
-import javafx.beans.binding.Bindings;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Line;
@@ -18,18 +17,24 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
+import org.w3c.dom.events.Event;
 
-import java.util.Optional;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.*;
 
 public class PathFinder extends Application{
-
+    private boolean changed = false;
     private BorderPane root;
     private Stage stage;
     private Pane center;
-    private Button newPlaceButton, newConButton, showConButton;
+    private Button newPlaceButton, newConButton, showConButton, changeConButton, findPathButton;
     private final ListGraph<Node> listGraph = new ListGraph<>();
     private SelectHandler selectHandler = new SelectHandler();
-    private showConHandler showConHandler = new showConHandler();
+    private ShowConHandler showConHandler = new ShowConHandler();
     private Node node1 = null, node2 = null;
 
     @Override
@@ -49,20 +54,23 @@ public class PathFinder extends Application{
 
         MenuItem newMapMenu = new MenuItem("New Map");
         fileMenu.getItems().add(newMapMenu);
-        newMapMenu.setOnAction(new newMapHandler());
+        newMapMenu.setOnAction(new NewMapHandler());
 
         MenuItem openMenu = new MenuItem("Open");
         fileMenu.getItems().add(openMenu);
-        openMenu.setOnAction(new openHandler());
+        openMenu.setOnAction(new OpenHandler());
 
         MenuItem saveMenu = new MenuItem("Save");
         fileMenu.getItems().add(saveMenu);
+        saveMenu.setOnAction(new SaveHandler());
 
         MenuItem saveImgMenu = new MenuItem("Save Image");
         fileMenu.getItems().add(saveImgMenu);
+        saveImgMenu.setOnAction(new SaveImageHandler());
 
         MenuItem exitMenu = new MenuItem("Exit");
         fileMenu.getItems().add(exitMenu);
+        exitMenu.setOnAction(new ExitItemHandler());
 
         FlowPane controls = new FlowPane();
         vbox.getChildren().add(controls);
@@ -71,43 +79,151 @@ public class PathFinder extends Application{
         controls.setHgap(10);
 
         newPlaceButton = new Button("New Place");
-        newPlaceButton.setOnAction(new newPlaceHandler());
+        newPlaceButton.setOnAction(new NewPlaceHandler());
 
         newConButton = new Button("New Connection");
-        newConButton.setOnAction(new newConHandler());
+        newConButton.setOnAction(new NewConHandler());
 
         showConButton = new Button("Show Connection");
-        showConButton.setOnAction(new showConHandler());
+        showConButton.setOnAction(new ShowConHandler());
 
-        Button changeConButton = new Button("Change Connection");
+        changeConButton = new Button("Change Connection");
+        changeConButton.setOnAction(new ChangeConHandler());
 
-        Button findPathButton = new Button("Find Path");
+        findPathButton = new Button("Find Path");
+        findPathButton.setOnAction(new FindPathHandler());
         controls.getChildren().addAll(newPlaceButton, newConButton, showConButton, changeConButton, findPathButton);
 
         Scene scene = new Scene(root, 618, 82);
         stage.setTitle("PathFinder");
         stage.setScene(scene);
         stage.setResizable(false);
-        //stage.setOnCloseRequest(new ExitHandler());
+        stage.setOnCloseRequest(new ExitHandler());
         stage.show();
     }
 
 
-    class newMapHandler implements EventHandler<ActionEvent>{
+    class ExitItemHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent actionEvent) {
-            showImg();
+            stage.fireEvent(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
         }
     }
 
-    class openHandler implements EventHandler<ActionEvent>{
+    class ExitHandler implements EventHandler<WindowEvent> {
         @Override
-        public void handle(ActionEvent actionEvent) {
-            showImg();
+        public void handle(WindowEvent windowEvent) {
+            if (changed) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setHeaderText("Unsaved changes, exit anyway?");
+                alert.setContentText(null);
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent() && result.get() != ButtonType.OK)
+                    windowEvent.consume();
+            }
         }
     }
 
-    class newPlaceHandler implements EventHandler<ActionEvent>{
+    class NewMapHandler implements EventHandler<ActionEvent> {
+        @Override
+        public void handle(ActionEvent actionEvent) {
+            showImg("europa.gif");
+        }
+    }
+
+    class OpenHandler implements EventHandler<ActionEvent> {
+        @Override
+        public void handle(ActionEvent actionEvent) {
+            try {
+                BufferedReader bufferedReader = new BufferedReader(new FileReader("europa.graph"));
+
+                ArrayList<String> al = new ArrayList<>();
+                String s;
+
+                while ((s = bufferedReader.readLine()) != null) {
+                    al.add(s);
+                }
+
+                openImageFile(al.get(0));
+                readNodes(al.get(1));
+
+                for(int i = 2; i < al.size(); i++) {
+                    readEdges(al.get(i));
+                }
+
+            } catch(IOException e) {
+                System.out.println(e);
+            }
+        }
+    }
+
+    class SaveHandler implements EventHandler<ActionEvent> {
+        @Override
+        public void handle(ActionEvent actionEvent) {
+            try {
+                FileWriter writer = new FileWriter("europa.graph");
+                PrintWriter out = new PrintWriter(writer);
+                out.println(String.format("file:europa.gif"));
+
+                Set<Node> set = listGraph.getNodes();
+                ArrayList<String> al = new ArrayList<>();
+                String s = "";
+                String t = "";
+                Collection<Edge> col;
+                for (Node n : set){
+                    s += String.format("%s;%s;%s;", n.getName(), n.getxPos(), n.getyPos());
+
+                    col = listGraph.getEdgesFrom(n);
+                    for (Edge e : col) {
+                        t = String.format("%s;%s;%s;%s", n.getName(), e.getDestination(), e.getName(), e.getWeight());
+                        al.add(t);
+                    }
+                }
+                s = s.substring(0, s.length()-1);
+                out.println(s);
+                for (String d : al) {
+                    out.println(d);
+                }
+                out.close();
+                writer.close();
+                changed = false;
+
+            } catch (IOException e) {
+                System.out.println(e);
+            }
+        }
+    }
+
+    private void openImageFile(String s){
+        String[] file = s.split(":");
+        showImg(file[1]);
+    }
+
+    private void readNodes(String s){
+        String[] nodes = s.split(";");
+        for (int i = 0; i < nodes.length; i+= 3) {
+            createNode(nodes[i], Double.parseDouble(nodes[i+1]), Double.parseDouble(nodes[i+2]));
+        }
+    }
+
+    private void readEdges(String s) {
+        String[] edges = s.split(";");
+
+        if (listGraph.getEdgeBetween(getNode(edges[1]), getNode(edges[0])) == null) {
+            createEdges(getNode(edges[0]), getNode(edges[1]), edges[2], Integer.parseInt(edges[3]));
+        }
+    }
+
+    private Node getNode(String s){
+        Set<Node> set = listGraph.getNodes();
+        for (Node n : set) {
+            if (n.getName().equals(s))
+                return n;
+        }
+        return null;
+    }
+
+    class NewPlaceHandler implements EventHandler<ActionEvent>{
         @Override
         public void handle(ActionEvent actionEvent) {
             center.setOnMouseClicked(new ClickHandler());
@@ -116,7 +232,7 @@ public class PathFinder extends Application{
         }
     }
 
-    class newConHandler implements EventHandler<ActionEvent> {
+    class NewConHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent actionEvent) {
             newConButton.setDisable(true);
@@ -130,6 +246,7 @@ public class PathFinder extends Application{
                 errorAlert.setTitle("Error!");
                 errorAlert.setHeaderText("There already exists a connection between these two!");
                 errorAlert.showAndWait();
+                unselect();
             } else {
                     try {
                         ConForm form = new ConForm(node1, node2);
@@ -138,11 +255,10 @@ public class PathFinder extends Application{
                         if (answer.isPresent() && answer.get() == ButtonType.OK) {
                             String name = form.getName();
                             int time = form.getTime();
-                            listGraph.connect(node1, node2, name, time);
-                            Line line = new Line(node1.getxPos(), node1.getyPos(), node2.getxPos(), node2.getyPos());
-                            line.setStrokeWidth(4);
-                            center.getChildren().add(line);
+                            createEdges(node1, node2, name, time);
+                            changed = true;
                         }
+                        unselect();
                     } catch (NumberFormatException e){
                         Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                         errorAlert.setTitle("Error!");
@@ -151,11 +267,15 @@ public class PathFinder extends Application{
                     }
                 }
             newConButton.setDisable(false);
-            node1.paintUnSelected();
-            node1 = null;
-            node2.paintUnSelected();
-            node2 = null;
         }
+    }
+
+    private void createEdges(Node n1, Node n2, String name, int time){
+        listGraph.connect(n1, n2, name, time);
+        Line line = new Line(n1.getxPos(), n1.getyPos(), n2.getxPos(), n2.getyPos());
+        line.setStrokeWidth(4);
+        line.setDisable(true);
+        center.getChildren().add(line);
     }
 
     class ClickHandler implements EventHandler<MouseEvent> {
@@ -169,14 +289,8 @@ public class PathFinder extends Application{
 
                 if (answer.isPresent() && answer.get() == ButtonType.OK) {
                         String name = form.getName();
-                        Node node = new Node(name, x, y);
-                        node.setOnMouseClicked(selectHandler);
-                        listGraph.add(node);
-                        Text text = new Text(node.getName());
-                        text.setX(node.getxPos());
-                        text.setY(node.getyPos()+30);
-                        text.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-                        center.getChildren().addAll(node, text);
+                        createNode(name, x, y);
+                        changed = true;
                 }
             } catch (Exception e) {
                 System.out.println(e);
@@ -185,6 +299,17 @@ public class PathFinder extends Application{
             center.setCursor(Cursor.DEFAULT);
             newPlaceButton.setDisable(false);
         }
+    }
+
+    private void createNode(String name, double x, double y){
+        Node node = new Node(name, x, y);
+        node.setOnMouseClicked(selectHandler);
+        listGraph.add(node);
+        Text text = new Text(node.getName());
+        text.setX(node.getxPos());
+        text.setY(node.getyPos()+30);
+        text.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        center.getChildren().addAll(node, text);
     }
 
     class SelectHandler implements EventHandler<MouseEvent> {
@@ -206,7 +331,8 @@ public class PathFinder extends Application{
             }
         }
     }
-    class showConHandler implements EventHandler<ActionEvent>{
+
+    class ShowConHandler implements EventHandler<ActionEvent>{
         @Override
         public void handle(ActionEvent actionEvent) {
             showConButton.setDisable(true);
@@ -220,26 +346,93 @@ public class PathFinder extends Application{
                 errorAlert.setTitle("Error!");
                 errorAlert.setHeaderText("There is no connection between these two!");
                 errorAlert.showAndWait();
+                unselect();
             } else{
                 Edge e = listGraph.getEdgeBetween(node1, node2);
-                ShowCon showCon = new ShowCon(node1, node2, e);
-                showCon.showAndWait();
-                showConButton.setDisable(false);
-                node1.paintUnSelected();
-                node1 = null;
-                node2.paintUnSelected();
-                node2 = null;
+                ShowConForm showConForm = new ShowConForm(node1, node2, e);
+                showConForm.showAndWait();
+                unselect();
+            }
 
+            showConButton.setDisable(false);
+        }
+    }
 
+    private void unselect(){
+        node1.paintUnSelected();
+        node1 = null;
+        node2.paintUnSelected();
+        node2 = null;
+    }
 
+    class ChangeConHandler implements EventHandler<ActionEvent> {
+        @Override
+        public void handle(ActionEvent actionEvent) {
+            changeConButton.setDisable(true);
+            if (node1 == null || node2 == null ) {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error!");
+                errorAlert.setHeaderText("Two places must be selected!");
+                errorAlert.showAndWait();
+            } else if (listGraph.getEdgeBetween(node1, node2) == null) {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error!");
+                errorAlert.setHeaderText("There is no connection between these two!");
+                errorAlert.showAndWait();
+                unselect();
+            } else{
+                Edge e = listGraph.getEdgeBetween(node1, node2);
+                ChangeConForm changeConForm = new ChangeConForm(node1, node2, e);
+                changeConForm.showAndWait();
+                listGraph.setConnectionWeight(node1, node2, changeConForm.getTime());
+                changed = true;
+                unselect();
+            }
+            changeConButton.setDisable(false);
+        }
+    }
 
+    class FindPathHandler implements EventHandler<ActionEvent> {
+        @Override
+        public void handle(ActionEvent actionEvent) {
+            changeConButton.setDisable(true);
+            if (node1 == null || node2 == null ) {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error!");
+                errorAlert.setHeaderText("Two places must be selected!");
+                errorAlert.showAndWait();
+            } else if (!listGraph.pathExists(node1, node2)) {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error!");
+                errorAlert.setHeaderText("There is no path between these two!");
+                errorAlert.showAndWait();
+                unselect();
+            } else{
+                List l = listGraph.getPath(node1, node2);
+                FindPathForm form = new FindPathForm(node1, node2, l);
+                form.showAndWait();
+                unselect();
+            }
+            changeConButton.setDisable(false);
+        }
+    }
+
+    class SaveImageHandler implements EventHandler<ActionEvent>{
+        public void handle(ActionEvent event){
+            try{
+                WritableImage image = center.snapshot(null, null);
+                BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
+                ImageIO.write(bufferedImage, "png", new File("capture.png"));
+            }catch (IOException e){
+                Alert alert = new Alert(Alert.AlertType.ERROR,"IO-fel "+e.getMessage());
+                alert.showAndWait();
             }
         }
     }
 
-    private void showImg(){
+    private void showImg(String fil){
         center = new Pane();
-        Image image = new Image("europa.gif");
+        Image image = new Image(fil);
         ImageView imageView = new ImageView(image);
         center.getChildren().add(imageView);
         double height = 112 + image.getHeight();

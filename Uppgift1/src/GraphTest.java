@@ -126,7 +126,7 @@ class GraphTest {
 
         assertThrows(NoSuchElementException.class, () -> graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3));
 
-        assertEquals(Optional.empty(), graph.getEdgesFrom(VALID_NODE_1).stream().map(Edge::getDestination).filter(d -> d.equals(VALID_NODE_3)).findFirst());
+        assertEquals(Optional.empty(), graph.getEdgesFrom(VALID_NODE_1).stream().map(Edge::getDestinationString).filter(d -> d.equals(VALID_NODE_3)).findFirst());
     }
 
     @Test
@@ -245,7 +245,7 @@ class GraphTest {
         assertEquals(2, actualEdges.size());
 
         var actualStrings = actualEdges.stream().map(Edge::getName).collect(Collectors.toSet());
-        actualStrings.addAll(actualEdges.stream().map(Edge::getDestination).collect(Collectors.toSet()));
+        actualStrings.addAll(actualEdges.stream().map(Edge::getDestinationString).collect(Collectors.toSet()));
         actualStrings.addAll(actualEdges.stream().map(stringEdge -> String.valueOf(stringEdge.getWeight())).collect(Collectors.toSet()));
         actualStrings.add(VALID_NODE_3);
 

@@ -7,10 +7,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-public class ShowCon extends Alert {
+public class ChangeConForm extends Alert {
 
     private TextField nameField = new TextField(), timeField = new TextField();
-    public ShowCon(Node n1, Node n2, Edge e) {
+    public ChangeConForm(Node n1, Node n2, Edge e) {
         super(AlertType.CONFIRMATION);
         this.setTitle("New Connection");
         this.setHeaderText(String.format("Connection from %s to %s", n1.getName(), n2.getName()));
@@ -25,16 +25,10 @@ public class ShowCon extends Alert {
         nameField.setEditable(false);
         grid.addRow(1, new Label("Time:"), timeField);
         timeField.setText(String.valueOf(e.getWeight()));
-        timeField.setEditable(false);
         getDialogPane().setContent(grid);
 
-
-
-
-//        getDialogPane().setContent(grid);
-//        getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(
-//                Bindings.isEmpty(nameField.textProperty())
-//                        .and(Bindings.isEmpty(timeField.textProperty())));
+        getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(
+                Bindings.isEmpty(timeField.textProperty()));
     }
 
     public String getName() {
