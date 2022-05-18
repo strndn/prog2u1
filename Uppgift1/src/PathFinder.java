@@ -18,7 +18,6 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import org.w3c.dom.events.Event;
 
 
 import javax.imageio.ImageIO;
@@ -27,20 +26,27 @@ import java.io.*;
 import java.util.*;
 
 public class PathFinder extends Application{
-    private boolean changed = false;
+    private boolean changed;
     private BorderPane root;
     private Stage stage;
     private Pane center;
-    private Button newPlaceButton, newConButton, showConButton, changeConButton, findPathButton;
+    private Button newPlaceButton;
+    private Button newConButton;
+    private Button showConButton;
+    private Button changeConButton;
+    private Button findPathButton;
     private final ListGraph<Node> listGraph = new ListGraph<>();
     private SelectHandler selectHandler = new SelectHandler();
-    private ShowConHandler showConHandler = new ShowConHandler();
-    private Node node1 = null, node2 = null;
+    private Node node1;
+    private Node node2;
 
     @Override
     public void start(Stage primaryStage) {
         stage = new Stage();
         root = new BorderPane();
+
+        center = new Pane();
+        root.setCenter(center);
 
         VBox vbox = new VBox();
         root.setTop(vbox);
@@ -70,7 +76,7 @@ public class PathFinder extends Application{
 
         MenuItem exitMenu = new MenuItem("Exit");
         fileMenu.getItems().add(exitMenu);
-        exitMenu.setOnAction(new ExitItemHandler());
+        exitMenu.setOnAction(new ExitMenuHandler());
 
         FlowPane controls = new FlowPane();
         vbox.getChildren().add(controls);
@@ -100,16 +106,35 @@ public class PathFinder extends Application{
         stage.setResizable(false);
         stage.setOnCloseRequest(new ExitHandler());
         stage.show();
+
+        //id för testning----------------------------
+        menuBar.setId("menu");
+        fileMenu.setId("menuFile");
+        newMapMenu.setId("menuNewMap");
+        openMenu.setId("menuOpenFile");
+        saveMenu.setId("menuSaveFile");
+        saveImgMenu.setId("menuSaveImage");
+        exitMenu.setId("menuExit");
+
+        findPathButton.setId("btnFindPath");
+        showConButton.setId("btnShowConnection");
+        newPlaceButton.setId("btnNewPlace");
+        changeConButton.setId("btnChangeConnection");
+        newConButton.setId("btnNewConnection");
+        center.setId("outputArea");
+        //-------------------------------------------
     }
 
 
-    class ExitItemHandler implements EventHandler<ActionEvent> {
+    //hanterar exit från menyn
+    class ExitMenuHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent actionEvent) {
             stage.fireEvent(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
         }
     }
 
+    //hanterar exit från kryss
     class ExitHandler implements EventHandler<WindowEvent> {
         @Override
         public void handle(WindowEvent windowEvent) {
@@ -124,46 +149,94 @@ public class PathFinder extends Application{
         }
     }
 
+    //laddar in en ny karta
     class NewMapHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent actionEvent) {
-            showImg("europa.gif");
-        }
-    }
+            if (node1 != null) {
+                node1.paintUnSelected();
+                node1 = null;
+            }
 
-    class OpenHandler implements EventHandler<ActionEvent> {
-        @Override
-        public void handle(ActionEvent actionEvent) {
-            try {
-                BufferedReader bufferedReader = new BufferedReader(new FileReader("europa.graph"));
+            if (node2 != null) {
+                node2.paintUnSelected();
+                node2 = null;
+            }
 
-                ArrayList<String> al = new ArrayList<>();
-                String s;
-
-                while ((s = bufferedReader.readLine()) != null) {
-                    al.add(s);
+            if (changed) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setHeaderText("Unsaved changes, create new anyway?");
+                alert.setContentText(null);
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent() && result.get() == ButtonType.OK){
+                    showImg("europa.gif");
                 }
-
-                openImageFile(al.get(0));
-                readNodes(al.get(1));
-
-                for(int i = 2; i < al.size(); i++) {
-                    readEdges(al.get(i));
-                }
-
-            } catch(IOException e) {
-                System.out.println(e);
+            } else {
+                showImg("europa.gif");
             }
         }
     }
 
+    //laddar in en fil
+    class OpenHandler implements EventHandler<ActionEvent> {
+        @Override
+        public void handle(ActionEvent actionEvent) {
+            if (node1 != null) {
+                node1.paintUnSelected();
+                node1 = null;
+            }
+
+            if (node2 != null) {
+                node2.paintUnSelected();
+                node2 = null;
+            }
+
+            if (changed) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setHeaderText("Unsaved changes, open anyway?");
+                alert.setContentText(null);
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent() && result.get() == ButtonType.OK){
+                    open();
+                }
+            } else {
+                open();
+            }
+        }
+    }
+
+    private void open(){
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader("europa.graph"));
+
+            ArrayList<String> al = new ArrayList<>();
+            String s;
+
+            while ((s = bufferedReader.readLine()) != null) {
+                al.add(s);
+            }
+
+            openImageFile(al.get(0));
+            readNodes(al.get(1));
+
+            for(int i = 2; i < al.size(); i++) {
+                readEdges(al.get(i));
+            }
+            bufferedReader.close();
+        } catch(IOException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR,"Fel "+e.getMessage());
+            alert.showAndWait();
+        }
+    }
+
+    //sparar till en fil
     class SaveHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent actionEvent) {
             try {
                 FileWriter writer = new FileWriter("europa.graph");
                 PrintWriter out = new PrintWriter(writer);
-                out.println(String.format("file:europa.gif"));
+                out.println("file:europa.gif");
 
                 Set<Node> set = listGraph.getNodes();
                 ArrayList<String> al = new ArrayList<>();
@@ -171,7 +244,7 @@ public class PathFinder extends Application{
                 String t = "";
                 Collection<Edge> col;
                 for (Node n : set){
-                    s += String.format("%s;%s;%s;", n.getName(), n.getxPos(), n.getyPos());
+                    s += String.format("%s;%s;%s;", n.getName(), n.getFirstCoordinate(), n.getSecondCoordinate());
 
                     col = listGraph.getEdgesFrom(n);
                     for (Edge e : col) {
@@ -189,16 +262,19 @@ public class PathFinder extends Application{
                 changed = false;
 
             } catch (IOException e) {
-                System.out.println(e);
+                Alert alert = new Alert(Alert.AlertType.ERROR,"Fel "+e.getMessage());
+                alert.showAndWait();
             }
         }
     }
 
+    //läser in addressen till filens bild
     private void openImageFile(String s){
         String[] file = s.split(":");
         showImg(file[1]);
     }
 
+    //läser in alla noder
     private void readNodes(String s){
         String[] nodes = s.split(";");
         for (int i = 0; i < nodes.length; i+= 3) {
@@ -206,6 +282,7 @@ public class PathFinder extends Application{
         }
     }
 
+    //läser in en nods kanter
     private void readEdges(String s) {
         String[] edges = s.split(";");
 
@@ -214,6 +291,7 @@ public class PathFinder extends Application{
         }
     }
 
+    //hämtar en nod
     private Node getNode(String s){
         Set<Node> set = listGraph.getNodes();
         for (Node n : set) {
@@ -223,6 +301,7 @@ public class PathFinder extends Application{
         return null;
     }
 
+    //hanterar när man skapar en ny nod
     class NewPlaceHandler implements EventHandler<ActionEvent>{
         @Override
         public void handle(ActionEvent actionEvent) {
@@ -232,6 +311,7 @@ public class PathFinder extends Application{
         }
     }
 
+    //hanterar när man skapar en ny koppling mellan två noder
     class NewConHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent actionEvent) {
@@ -270,14 +350,16 @@ public class PathFinder extends Application{
         }
     }
 
+    //skapar kanter mellan två noder
     private void createEdges(Node n1, Node n2, String name, int time){
         listGraph.connect(n1, n2, name, time);
-        Line line = new Line(n1.getxPos(), n1.getyPos(), n2.getxPos(), n2.getyPos());
+        Line line = new Line(n1.getFirstCoordinate(), n1.getSecondCoordinate(), n2.getFirstCoordinate(), n2.getSecondCoordinate());
         line.setStrokeWidth(4);
         line.setDisable(true);
         center.getChildren().add(line);
     }
 
+    //hanterar vart man klickade på kartan
     class ClickHandler implements EventHandler<MouseEvent> {
         @Override
         public void handle(MouseEvent mouseEvent) {
@@ -293,7 +375,8 @@ public class PathFinder extends Application{
                         changed = true;
                 }
             } catch (Exception e) {
-                System.out.println(e);
+                Alert alert = new Alert(Alert.AlertType.ERROR,"Fel "+e.getMessage());
+                alert.showAndWait();
             }
             center.setOnMouseClicked(null);
             center.setCursor(Cursor.DEFAULT);
@@ -301,17 +384,20 @@ public class PathFinder extends Application{
         }
     }
 
+    //skapar en ny nod
     private void createNode(String name, double x, double y){
         Node node = new Node(name, x, y);
         node.setOnMouseClicked(selectHandler);
         listGraph.add(node);
+        node.setId(node.getName());
         Text text = new Text(node.getName());
-        text.setX(node.getxPos());
-        text.setY(node.getyPos()+30);
+        text.setX(node.getFirstCoordinate());
+        text.setY(node.getSecondCoordinate()+30);
         text.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         center.getChildren().addAll(node, text);
     }
 
+    //hanterar vilka noder man markerar
     class SelectHandler implements EventHandler<MouseEvent> {
         @Override
         public void handle(MouseEvent mouseEvent) {
@@ -332,6 +418,7 @@ public class PathFinder extends Application{
         }
     }
 
+    //hanterar vilka noder man vill visa koppling mellan
     class ShowConHandler implements EventHandler<ActionEvent>{
         @Override
         public void handle(ActionEvent actionEvent) {
@@ -353,11 +440,11 @@ public class PathFinder extends Application{
                 showConForm.showAndWait();
                 unselect();
             }
-
             showConButton.setDisable(false);
         }
     }
 
+    //avselekterar alla noder som är selekterade
     private void unselect(){
         node1.paintUnSelected();
         node1 = null;
@@ -365,6 +452,7 @@ public class PathFinder extends Application{
         node2 = null;
     }
 
+    //hanterar ändring av kopplings vikt
     class ChangeConHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent actionEvent) {
@@ -392,6 +480,7 @@ public class PathFinder extends Application{
         }
     }
 
+    //hanterar letandet av den kortaste vägen mellan två noder
     class FindPathHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent actionEvent) {
@@ -417,6 +506,7 @@ public class PathFinder extends Application{
         }
     }
 
+    //sparar en skärmdump av kartan
     class SaveImageHandler implements EventHandler<ActionEvent>{
         public void handle(ActionEvent event){
             try{
@@ -430,13 +520,14 @@ public class PathFinder extends Application{
         }
     }
 
+    //visar upp kartan
     private void showImg(String fil){
-        center = new Pane();
+        center.getChildren().clear();
+        listGraph.clear();
         Image image = new Image(fil);
         ImageView imageView = new ImageView(image);
         center.getChildren().add(imageView);
         double height = 112 + image.getHeight();
-        root.setCenter(center);
         stage.setHeight(height);
     }
 

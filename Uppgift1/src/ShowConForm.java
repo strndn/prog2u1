@@ -1,18 +1,17 @@
-import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
 public class ShowConForm extends Alert {
 
-    private TextField nameField = new TextField(), timeField = new TextField();
+    private TextField nameField = new TextField();
+    private TextField timeField = new TextField();
     public ShowConForm(Node n1, Node n2, Edge e) {
         super(AlertType.CONFIRMATION);
-        this.setTitle("New Connection");
+        this.setTitle("Show Connection");
         this.setHeaderText(String.format("Connection from %s to %s", n1.getName(), n2.getName()));
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(10));

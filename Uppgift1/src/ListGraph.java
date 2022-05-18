@@ -11,6 +11,10 @@ public class ListGraph<T> implements Graph, Serializable {
 
     private final Map<Object, Set<Edge>> nodes = new HashMap<>();
 
+    public void clear(){
+        nodes.clear();
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
