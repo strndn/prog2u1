@@ -21,7 +21,7 @@ public class ListGraph<T> implements Graph, Serializable {
     }
 
     @Override
-    public void add(java.lang.Object node) {
+    public void add(Object node) {
         nodes.putIfAbsent(node, new HashSet<>());
     }
 
