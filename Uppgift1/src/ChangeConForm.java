@@ -9,7 +9,8 @@ import javafx.scene.layout.GridPane;
 
 public class ChangeConForm extends Alert {
 
-    private TextField nameField = new TextField(), timeField = new TextField();
+    private TextField nameField = new TextField();
+    private TextField timeField = new TextField();
     public ChangeConForm(Node n1, Node n2, Edge e) {
         super(AlertType.CONFIRMATION);
         this.setTitle("New Connection");

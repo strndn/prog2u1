@@ -6,26 +6,27 @@ import java.util.Objects;
 
 public class Node extends Canvas {
     private final String name;
-    private final double xPos, yPos;
+    private final double firstCoordinate;
+    private final double secondCoordinate;
     private boolean selected;
 
 
-    public Node(String name, double xPos, double yPos) {
+    public Node(String name, double firstCoordinate, double secondCoordinate) {
         super(25, 25);
         this.name = name;
-        this.xPos = xPos;
-        this.yPos = yPos;
+        this.firstCoordinate = firstCoordinate;
+        this.secondCoordinate = secondCoordinate;
 
-        relocate(xPos - (getWidth()/2), yPos - (getHeight()/2));
+        relocate(firstCoordinate - (getWidth()/2), secondCoordinate - (getHeight()/2));
         paintUnSelected();
     }
 
-    public double getxPos() {
-        return xPos;
+    public double getFirstCoordinate() {
+        return firstCoordinate;
     }
 
-    public double getyPos() {
-        return yPos;
+    public double getSecondCoordinate() {
+        return secondCoordinate;
     }
 
     public void paintUnSelected(){
