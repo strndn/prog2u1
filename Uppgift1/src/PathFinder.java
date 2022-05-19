@@ -142,7 +142,7 @@ public class PathFinder extends Application{
             if (changed) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setHeaderText("Unsaved changes, exit anyway?");
-                alert.setContentText(null);
+                alert.setContentText("Unsaved changes, exit anyway?");
                 Optional<ButtonType> result = alert.showAndWait();
                 if (result.isPresent() && result.get() != ButtonType.OK)
                     windowEvent.consume();
@@ -253,7 +253,7 @@ public class PathFinder extends Application{
                         al.add(t);
                     }
                 }
-                s = s.substring(0, s.length()-1);
+                s = s.substring(0, s.length());
                 out.println(s);
                 for (String d : al) {
                     out.println(d);
