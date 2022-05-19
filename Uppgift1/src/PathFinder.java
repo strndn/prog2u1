@@ -12,6 +12,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -37,12 +38,12 @@ public class PathFinder extends Application{
     private Button findPathButton;
     private final ListGraph<Node> listGraph = new ListGraph<>();
     private SelectHandler selectHandler = new SelectHandler();
-    private Node node1;
-    private Node node2;
+    private Node from;
+    private Node to;
 
     @Override
     public void start(Stage primaryStage) {
-        stage = new Stage();
+        stage = primaryStage;
         root = new BorderPane();
 
         center = new Pane();
@@ -98,7 +99,7 @@ public class PathFinder extends Application{
 
         findPathButton = new Button("Find Path");
         findPathButton.setOnAction(new FindPathHandler());
-        controls.getChildren().addAll(newPlaceButton, newConButton, showConButton, changeConButton, findPathButton);
+        controls.getChildren().addAll(findPathButton, showConButton, newPlaceButton, newConButton, changeConButton);
 
         Scene scene = new Scene(root, 618, 82);
         stage.setTitle("PathFinder");
@@ -153,14 +154,12 @@ public class PathFinder extends Application{
     class NewMapHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent actionEvent) {
-            if (node1 != null) {
-                node1.paintUnSelected();
-                node1 = null;
+            if (from != null) {
+                from = null;
             }
 
-            if (node2 != null) {
-                node2.paintUnSelected();
-                node2 = null;
+            if (to != null) {
+                to = null;
             }
 
             if (changed) {
@@ -170,9 +169,11 @@ public class PathFinder extends Application{
                 Optional<ButtonType> result = alert.showAndWait();
                 if (result.isPresent() && result.get() == ButtonType.OK){
                     showImg("europa.gif");
+                    changed = true;
                 }
             } else {
                 showImg("europa.gif");
+                changed = true;
             }
         }
     }
@@ -181,14 +182,12 @@ public class PathFinder extends Application{
     class OpenHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent actionEvent) {
-            if (node1 != null) {
-                node1.paintUnSelected();
-                node1 = null;
+            if (from != null) {
+                from = null;
             }
 
-            if (node2 != null) {
-                node2.paintUnSelected();
-                node2 = null;
+            if (to != null) {
+                to = null;
             }
 
             if (changed) {
@@ -198,9 +197,11 @@ public class PathFinder extends Application{
                 Optional<ButtonType> result = alert.showAndWait();
                 if (result.isPresent() && result.get() == ButtonType.OK){
                     open();
+                    changed = true;
                 }
             } else {
                 open();
+                changed = true;
             }
         }
     }
@@ -262,7 +263,7 @@ public class PathFinder extends Application{
                 changed = false;
 
             } catch (IOException e) {
-                Alert alert = new Alert(Alert.AlertType.ERROR,"Fel "+e.getMessage());
+                Alert alert = new Alert(Alert.AlertType.ERROR,"Något fel uppstod!\nFelmeddelande: "+e.getMessage());
                 alert.showAndWait();
             }
         }
@@ -316,36 +317,34 @@ public class PathFinder extends Application{
         @Override
         public void handle(ActionEvent actionEvent) {
             newConButton.setDisable(true);
-            if (node1 == null || node2 == null ) {
+            if (from == null || to == null ) {
                 Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                 errorAlert.setTitle("Error!");
                 errorAlert.setHeaderText("Two places must be selected!");
                 errorAlert.showAndWait();
-            } else if (listGraph.getEdgeBetween(node1, node2) != null) {
+            } else if (listGraph.getEdgeBetween(from, to) != null) {
                 Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                 errorAlert.setTitle("Error!");
                 errorAlert.setHeaderText("There already exists a connection between these two!");
                 errorAlert.showAndWait();
-                unselect();
             } else {
-                    try {
-                        ConForm form = new ConForm(node1, node2);
-                        Optional<ButtonType> answer = form.showAndWait();
+                try {
+                    ConForm form = new ConForm(from, to);
+                    Optional<ButtonType> answer = form.showAndWait();
 
-                        if (answer.isPresent() && answer.get() == ButtonType.OK) {
-                            String name = form.getName();
-                            int time = form.getTime();
-                            createEdges(node1, node2, name, time);
-                            changed = true;
-                        }
-                        unselect();
-                    } catch (NumberFormatException e){
-                        Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                        errorAlert.setTitle("Error!");
-                        errorAlert.setHeaderText("Please enter numbers into time!");
-                        errorAlert.showAndWait();
+                    if (answer.isPresent() && answer.get() == ButtonType.OK) {
+                        String name = form.getName();
+                        int time = form.getTime();
+                        createEdges(from, to, name, time);
+                        changed = true;
                     }
+                } catch (NumberFormatException e){
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Error!");
+                    errorAlert.setHeaderText("Please enter numbers into time!");
+                    errorAlert.showAndWait();
                 }
+            }
             newConButton.setDisable(false);
         }
     }
@@ -370,12 +369,12 @@ public class PathFinder extends Application{
                 Optional<ButtonType> answer = form.showAndWait();
 
                 if (answer.isPresent() && answer.get() == ButtonType.OK) {
-                        String name = form.getName();
-                        createNode(name, x, y);
-                        changed = true;
+                    String name = form.getName();
+                    createNode(name, x, y);
+                    changed = true;
                 }
             } catch (Exception e) {
-                Alert alert = new Alert(Alert.AlertType.ERROR,"Fel "+e.getMessage());
+                Alert alert = new Alert(Alert.AlertType.ERROR,"Något fel uppstod!\nFelmeddelande: "+e.getMessage());
                 alert.showAndWait();
             }
             center.setOnMouseClicked(null);
@@ -402,18 +401,22 @@ public class PathFinder extends Application{
         @Override
         public void handle(MouseEvent mouseEvent) {
             Node n = (Node) mouseEvent.getSource();
-            if (node1 == null) {
-                node1 = n;
-                node1.paintSelected();
-            } else if (node2 == null && n != node1)  {
-                node2 = n;
-                node2.paintSelected();
-            } else if (node1 == n) {
-                node1 = null;
-                n.paintUnSelected();
-            } else if (node2 == n) {
-                node2 = null;
-                n.paintUnSelected();
+            if (from == null && n != to) {
+                from = n;
+                n.setFill(Color.RED);
+                n.select();
+            } else if (to == null && n != from)  {
+                to = n;
+                n.setFill(Color.RED);
+                n.select();
+            } else if (from == n) {
+                from = null;
+                n.setFill(Color.BLUE);
+                n.select();
+            } else if (to == n) {
+                to = null;
+                n.setFill(Color.BLUE);
+                n.select();
             }
         }
     }
@@ -423,58 +426,47 @@ public class PathFinder extends Application{
         @Override
         public void handle(ActionEvent actionEvent) {
             showConButton.setDisable(true);
-            if (node1 == null || node2 == null ) {
+            if (from == null || to == null ) {
                 Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                 errorAlert.setTitle("Error!");
                 errorAlert.setHeaderText("Two places must be selected!");
                 errorAlert.showAndWait();
-            } else if (listGraph.getEdgeBetween(node1, node2) == null) {
+            } else if (listGraph.getEdgeBetween(from, to) == null) {
                 Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                 errorAlert.setTitle("Error!");
                 errorAlert.setHeaderText("There is no connection between these two!");
                 errorAlert.showAndWait();
-                unselect();
             } else{
-                Edge e = listGraph.getEdgeBetween(node1, node2);
-                ShowConForm showConForm = new ShowConForm(node1, node2, e);
+                Edge e = listGraph.getEdgeBetween(from, to);
+                ShowConForm showConForm = new ShowConForm(from, to, e);
                 showConForm.showAndWait();
-                unselect();
             }
             showConButton.setDisable(false);
         }
     }
 
-    //avselekterar alla noder som är selekterade
-    private void unselect(){
-        node1.paintUnSelected();
-        node1 = null;
-        node2.paintUnSelected();
-        node2 = null;
-    }
 
     //hanterar ändring av kopplings vikt
     class ChangeConHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent actionEvent) {
             changeConButton.setDisable(true);
-            if (node1 == null || node2 == null ) {
+            if (from == null || to == null ) {
                 Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                 errorAlert.setTitle("Error!");
                 errorAlert.setHeaderText("Two places must be selected!");
                 errorAlert.showAndWait();
-            } else if (listGraph.getEdgeBetween(node1, node2) == null) {
+            } else if (listGraph.getEdgeBetween(from, to) == null) {
                 Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                 errorAlert.setTitle("Error!");
                 errorAlert.setHeaderText("There is no connection between these two!");
                 errorAlert.showAndWait();
-                unselect();
             } else{
-                Edge e = listGraph.getEdgeBetween(node1, node2);
-                ChangeConForm changeConForm = new ChangeConForm(node1, node2, e);
+                Edge e = listGraph.getEdgeBetween(from, to);
+                ChangeConForm changeConForm = new ChangeConForm(from, to, e);
                 changeConForm.showAndWait();
-                listGraph.setConnectionWeight(node1, node2, changeConForm.getTime());
+                listGraph.setConnectionWeight(from, to, changeConForm.getTime());
                 changed = true;
-                unselect();
             }
             changeConButton.setDisable(false);
         }
@@ -485,22 +477,20 @@ public class PathFinder extends Application{
         @Override
         public void handle(ActionEvent actionEvent) {
             changeConButton.setDisable(true);
-            if (node1 == null || node2 == null ) {
+            if (from == null || to == null ) {
                 Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                 errorAlert.setTitle("Error!");
                 errorAlert.setHeaderText("Two places must be selected!");
                 errorAlert.showAndWait();
-            } else if (!listGraph.pathExists(node1, node2)) {
+            } else if (!listGraph.pathExists(from, to)) {
                 Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                 errorAlert.setTitle("Error!");
                 errorAlert.setHeaderText("There is no path between these two!");
                 errorAlert.showAndWait();
-                unselect();
             } else{
-                List l = listGraph.getPath(node1, node2);
-                FindPathForm form = new FindPathForm(node1, node2, l);
+                List l = listGraph.getPath(from, to);
+                FindPathForm form = new FindPathForm(from, to, l);
                 form.showAndWait();
-                unselect();
             }
             changeConButton.setDisable(false);
         }
@@ -514,7 +504,7 @@ public class PathFinder extends Application{
                 BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
                 ImageIO.write(bufferedImage, "png", new File("capture.png"));
             }catch (IOException e){
-                Alert alert = new Alert(Alert.AlertType.ERROR,"IO-fel "+e.getMessage());
+                Alert alert = new Alert(Alert.AlertType.ERROR,"Fel vid sparning av bild!");
                 alert.showAndWait();
             }
         }
@@ -528,7 +518,9 @@ public class PathFinder extends Application{
         ImageView imageView = new ImageView(image);
         center.getChildren().add(imageView);
         double height = 112 + image.getHeight();
+        double width = image.getWidth();
         stage.setHeight(height);
+        stage.setWidth(width);
     }
 
     public static void main(String[] args) {

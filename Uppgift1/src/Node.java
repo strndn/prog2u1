@@ -1,10 +1,9 @@
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 
 import java.util.Objects;
 
-public class Node extends Canvas {
+public class Node extends Circle {
     private final String name;
     private final double firstCoordinate;
     private final double secondCoordinate;
@@ -12,13 +11,11 @@ public class Node extends Canvas {
 
 
     public Node(String name, double firstCoordinate, double secondCoordinate) {
-        super(25, 25);
+        super(firstCoordinate, secondCoordinate, 13, Color.BLUE);
         this.name = name;
         this.firstCoordinate = firstCoordinate;
         this.secondCoordinate = secondCoordinate;
 
-        relocate(firstCoordinate - (getWidth()/2), secondCoordinate - (getHeight()/2));
-        paintUnSelected();
     }
 
     public double getFirstCoordinate() {
@@ -27,24 +24,6 @@ public class Node extends Canvas {
 
     public double getSecondCoordinate() {
         return secondCoordinate;
-    }
-
-    public void paintUnSelected(){
-        GraphicsContext gc = getGraphicsContext2D();
-        gc.setFill(Color.BLUE);
-        gc.fillOval(0, 0, getWidth()-1, getHeight()-1);
-        selected = false;
-    }
-
-    public void paintSelected(){
-        GraphicsContext gc = getGraphicsContext2D();
-        gc.setFill(Color.RED);
-        gc.fillOval(0, 0, getWidth()-1, getHeight()-1);
-        selected = true;
-    }
-
-    public boolean isSelected(){
-        return selected;
     }
 
     public String getName() {
@@ -56,6 +35,14 @@ public class Node extends Canvas {
             return name.equals(nod.name);
         }
         return false;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void select(){
+        selected =! selected;
     }
 
     public int hashCode() {
